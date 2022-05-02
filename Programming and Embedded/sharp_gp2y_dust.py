@@ -3,14 +3,14 @@ from machine import Pin, ADC
 from time import sleep
 
 # pin setup
-LED_PIN = machine.Pin(14, machine.Pin.OUT)  # D0
-VO_PIN = machine.ADC(Pin(32))  # A0
+LED_PIN = machine.Pin(14, machine.Pin.OUT)  # LED
+VO_PIN = machine.ADC(Pin(32)) # ADC setup
 
 # constants
-SAMPLING_TIME = 0.00028
-DELTA_TIME = 0.00004
-SLEEP_TIME = 0.00968
-VOC = 0.6
+SAMPLING_TIME = 0.00028 # 28ms
+DELTA_TIME = 0.00004 # 4ms
+SLEEP_TIME = 0.00968 # 0.968 seconds to sleep
+VOC = 0.6 # ug/m3
 MAX = 0
 
 
@@ -47,7 +47,7 @@ def monitor(sample_size=100, callback=None):
                 density = calc_density(volt)
                 mv = volt * 1000
                 print(
-                    "{mv} mV / {density} ug/m3 (Voc={voc}) | Max: {max_} ug/m3".format(  # noqa
+                    "{mv} mV / {density} ug/m3 (Voc={voc}) | Max: {max_} ug/m3".format(  
                         mv=mv,
                         density=density,
                         voc=VOC,
@@ -55,13 +55,11 @@ def monitor(sample_size=100, callback=None):
                     )
                 )
                 vals = []
-                if callback:
-                    callback(density)
-        except KeyboardInterrupt:
+                if callback: 
+                    callback(density) 
+        except KeyboardInterrupt: 
             break
-        except Exception:
+        except Exception: 
             raise
         finally:
             LED_PIN.value(0)
-            
-monitor()
