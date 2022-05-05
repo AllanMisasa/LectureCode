@@ -1,10 +1,9 @@
+import time
 import sqlite3
 import random
+from datetime import datetime
 
-temp = 20
-hum = 50
-dust = 0.1
-co2 = 10
+from numpy import insert
 
 def random_variables():
     temp = random.randint(0, 50)
@@ -14,54 +13,66 @@ def random_variables():
     return temp, hum, dust, co2
 
 
-conn = sqlite3.connect(r'C:/db/tttest.db')
+conn = sqlite3.connect(r'C:/db/IoT.db')
 c = conn.cursor()
 
+c.execute("DROP TABLE IF EXISTS MEASUREMENTS")
+c.execute("DROP TABLE IF EXISTS DEVICES")
+
+devs = '''CREATE TABLE DEVICES(
+    DEVICE INTEGER PRIMARY KEY,
+    NAME TEXT NOT NULL
+)'''
+
+
 sql = '''CREATE TABLE MEASUREMENTS(
-   TEMPERATURE INT NOT NULL,
-   HUMIDITY INT NOT NULL,
+    DATE TEXT PRIMARY KEY,
+    DEVICE_ID INT REFERENCES DEVICES(DEVICE),
+    TEMPERATURE INT NOT NULL,
+    HUMIDITY INT NOT NULL,
     DUST FLOAT NOT NULL,
     CO2 INT NOT NULL
 )'''
 
-c.execute(sql)
+# Only run once
+
+
 print("Created table successfully........")
-# conn.commit()
+c.execute(devs)
+c.execute(sql)
 
-sql2 = '''CREATE TABLE DEVICES(
-    DEVICE_ID INTEGER PRIMARY KEY
-'''
+p1 = "Raspberry_Pi_1"
+p2 = "Raspberry_Pi_2"
 
-add_keys = '''ALTER TABLE MEASUREMENTS ADD FOREIGN KEY (DEVICE_ID) INTEGER REFERENCES DEVICES(DEVICE_ID)'''
+def new_device(device_name):
+    c.execute('INSERT INTO DEVICES(NAME) VALUES (?)', (device_name,))
+    print("Inserted device successfully........")
 
-c.execute(sql2)
+new_device(p1)
+new_device(p2)
 
-c.execute()
+def create_date():
+    date = datetime.now()
+    date = date.strftime("%Y-%m-%d %H:%M:%S:%f")
+    return date
 
-def device1data():
-    dev1_id = 1
-    for i in range(1000):
-        temp, hum, dust, co2 = random_variables()
-        c.execute('''INSERT INTO MEASUREMENTS(DEVICE_ID, TEMPERATURE, HUMIDITY, DUST, CO2) 
-                VALUES (?, ?, ?, ?, ?)''',
-            (dev1_id, temp, hum, dust, co2))
-        print("Inserted data successfully........")
-    conn.commit()
+def insert_data(device_name):
+    current_date = create_date()
+    device_id = c.execute("SELECT DEVICE FROM DEVICES WHERE NAME = ?", (device_name,)).fetchone()
+    temp, hum, dust, co2 = random_variables()
+    c.execute('''INSERT INTO MEASUREMENTS(DATE, DEVICE_ID, TEMPERATURE, HUMIDITY, DUST, CO2) 
+            VALUES (?, ?, ?, ?, ?, ?)''',
+        (current_date, device_id[0], temp, hum, dust, co2))
+    print("Inserted data successfully........")
 
-def device2data():
-    dev2_id = 2
-    for i in range(1000):
-        temp, hum, dust, co2 = random_variables()
-        c.execute('''INSERT INTO MEASUREMENTS(DEVICE_ID, TEMPERATURE, HUMIDITY, DUST, CO2) 
-                VALUES (?, ?, ?, ?, ?)''',
-            (dev2_id, temp, hum, dust, co2))
-        print("Inserted data successfully........")
-    conn.commit()
-
-device1data()
-device2data()
+for i in range(1000):
+    insert_data(p1)
+    time.sleep(0.00001)
+    insert_data(p2)
+    time.sleep(0.00001)
 
 c.execute("SELECT * FROM MEASUREMENTS")
 data = c.fetchall()
 print(data)
 conn.commit()
+conn.close()
