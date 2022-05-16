@@ -10,6 +10,15 @@ df = pd.read_sql_query('SELECT * FROM MEASUREMENTS', conn) # Read data from data
 
 print(df.head()) # Print first 5 rows of dataframe
 
+formatted_dates = list(df['DATE']) # Format dates to be readable'
+for i in formatted_dates:
+    formatted_dates[formatted_dates.index(i)] = i[:22]
+
+fig = px.histogram(df, x='DATE', y="TEMPERATURE", title = 'Temperature').update_xaxes(categoryorder = "total ascending") # Plot temperature data
+
+fig.show()
+
+'''
 st.set_page_config(page_title='IoT Dashboard', layout='wide') # Set page title and layout
 
 st.title('Smart City Dashboard') # Set page title
@@ -49,3 +58,4 @@ with fig_col2:
 
 st.markdown("### Detailed data view") # Create header
 st.dataframe(df) # Create dataframe
+'''
